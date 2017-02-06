@@ -252,7 +252,7 @@ class TransmissionRPC
    */
   public function add_file ( $torrent_location, $save_path = '', $extra_options = array() )
   {
-    $extra_options['download-dir'] = $save_path;
+    if(!empty($save_path)) $extra_options['download-dir'] = $save_path;
     $extra_options['filename'] = $torrent_location;
     
     return $this->request( "torrent-add", $extra_options );
@@ -448,7 +448,11 @@ class TransmissionRPC
     {
       if( is_object( $value ) ) $array[$index] = $value->toArray();	// Convert objects to arrays so they can be JSON encoded
       if( is_array( $value ) ) $array[$index] = $this->cleanRequestData( $value );	// Recursion
-      if( empty( $value ) && $value != 0 ) unset( $array[$index] );	// Remove empty members
+      if( empty( $value ) && $value !== 0 )	// Remove empty members
+      {
+        unset( $array[$index] );
+        continue; // Skip the rest of the tests - they may re-add the element.
+      }
       if( is_numeric( $value ) ) $array[$index] = $value+0;	// Force type-casting for proper JSON encoding (+0 is a cheap way to maintain int/float/etc)
       if( is_bool( $value ) ) $array[$index] = ( $value ? 1 : 0);	// Store boolean values as 0 or 1
       if( is_string( $value ) ) {
